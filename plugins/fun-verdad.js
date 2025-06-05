@@ -1,9 +1,9 @@
 const handler = async (m, {conn}) => {
-  conn.reply(m.chat, `*◤ ────「 𝚅 𝙴 𝚁 𝙳 𝙰 𝙳 」──── ◥*
+  conn.reply(m.chat, `*─「 VERDAD 」─*
 
 *⚄︎.- ${pickRandom(global.verdad)}*
 
-*◣ ──「  C R O W B O T  」── ◢*
+*─「 ${global.packname || 'Bot'} 」─*
   `, m);
 };
 handler.help = ['verdad'];

@@ -5,25 +5,28 @@ const handler = async (m, {conn, text, __dirname, usedPrefix, command}) => {
 
 const gp = global.db.data.chats[m.chat] || {};
 
-if (!gp.nsfw && m.isGroup) return m.reply('[❗] 𝐋𝐨𝐬 𝐜𝐨𝐦𝐚𝐧𝐝𝐨𝐬 +𝟏𝟖 𝐞𝐬𝐭𝐚́𝐧 𝐝𝐞𝐬𝐚𝐜𝐭𝐢𝐯𝐚𝐝𝐨𝐬 𝐞𝐧 𝐞𝐬𝐭𝐞 𝐠𝐫𝐮𝐩𝐨.\n> 𝐬𝐢 𝐞𝐬 𝐚𝐝𝐦𝐢𝐧 𝐲 𝐝𝐞𝐬𝐞𝐚 𝐚𝐜𝐭𝐢𝐯𝐚𝐫𝐥𝐨𝐬 𝐮𝐬𝐞 .enable nsfw');
+if (!gp.nsfw && m.isGroup) return m.reply('❗ Los comandos +18 están desactivados en este grupo.\nSi eres admin y deseas activarlos, usa: .enable nsfw');
 
-  if (!text) throw `🥵 Por favo, ingresa el nombre de algun hentai para buscar.`;
+  if (!text) throw `ⓘ Ingresa el nombre del hentai a buscar.`;
   const searchResults = await searchHentai(text);
-  let teks = searchResults.result.map((v, i) => `
-❀ ${i+1}. *${v.title}*
-> ↳ ✐︎ *Vistas:* ${v.views}
-> ↳ 🜸 *Link:* ${v.url}`).join('\n\n');
+  let teks = '';
   let randomThumbnail;
+
   if (searchResults.result.length > 0) {
+    teks = searchResults.result.map((v, i) => `
+❀ ${i+1}. ${v.title}
+> Vistas: ${v.views}
+> Link: ${v.url}`).join('\n\n');
     const randomIndex = Math.floor(Math.random() * searchResults.result.length);
     randomThumbnail = searchResults.result[randomIndex].thumbnail;
-
-await conn.sendMessage(m.chat, { image: { url: randomThumbnail }, caption: teks }, { quoted: m });
+    await conn.sendMessage(m.chat, { image: { url: randomThumbnail }, caption: teks }, { quoted: m });
   } else {
-    randomThumbnail = 'https://pictures.hentai-foundry.com/e/Error-Dot/577798/Error-Dot-577798-Zero_Two.png';
-    teks = `✧ No se encontraron resultados.,.`;
+    randomThumbnail = 'https://pictures.hentai-foundry.com/e/Error-Dot/577798/Error-Dot-577798-Zero_Two.png'; // Default error image
+    teks = `✧ No se encontraron resultados.`;
+    // Only send the message if no results were found and thus no message sent yet.
+    conn.sendFile(m.chat, randomThumbnail, 'error.jpg', teks, m);
   }
-  conn.sendFile(m.chat, randomThumbnail, 'error.jpg', teks, m);
+  // Removed the redundant conn.sendFile(m.chat, randomThumbnail, 'error.jpg', teks, m); that was outside the else block.
 };
 handler.command = ['searchhentai', 'hentaisearch', 'htsearch']
 export default handler;
@@ -47,6 +50,8 @@ async function searchHentai(search) {
       resolve(result);
     }).catch((err) => {
       console.log(err);
+      // It's better to reject the promise on error
+      reject(err);
     });
   });
 }
