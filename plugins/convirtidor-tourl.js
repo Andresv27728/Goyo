@@ -6,21 +6,21 @@ import { fileTypeFromBuffer } from "file-type";
 const handler = async (m, { conn }) => {
 let q = m.quoted ? m.quoted : m;
   let mime = (q.msg || q).mimetype || "";
-  if (!mime) return m.reply("No media found", null, { quoted: fkontak });
+  if (!mime) return m.reply("No se encontró ningún archivo multimedia.", null, { quoted: global.fkontak }); // Assuming fkontak is global
   let media = await q.download();
 let link = await catbox(media);
-  let caption = `📮 *L I N K :*
- \`\`\`• ${link}\`\`\`
-📊 *S I Z E :* ${formatBytes(media.length)}
-📛 *E x p i r e d :* "No Expiry Date" 
+  let caption = `🔗 Link:
+ \`\`\`${link}\`\`\`
+📊 Tamaño: ${formatBytes(media.length)}
+🗓️ Expira: Nunca
 `;
 
-  await m.reply(caption);
+  await m.reply(caption.trim()); // Added trim()
 }
 handler.command = handler.help = ['tourl']
 handler.tags = ['tools']
-handler.diamond = true
-handler.estrellas = 5;
+handler.diamond = true // Assuming this is a custom property
+handler.estrellas = 5; // Assuming this is a custom property
 export default handler
 
 
@@ -51,6 +51,9 @@ function formatBytes(bytes) {
  */
 async function catbox(content) {
   const { ext, mime } = (await fileTypeFromBuffer(content)) || {};
+  if (!ext || !mime) { // Added check for undefined ext or mime
+    throw new Error("No se pudo determinar el tipo de archivo.");
+  }
   const blob = new Blob([content.toArrayBuffer()], { type: mime });
   const formData = new FormData();
   const randomBytes = crypto.randomBytes(5).toString("hex");
@@ -65,6 +68,9 @@ async function catbox(content) {
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36",
     },
   });
-
-  return await response.text();
+  const responseText = await response.text();
+  if (!response.ok || !responseText.startsWith("https://catbox.moe")) { // Check if response is a valid catbox URL
+    throw new Error(`Error al subir archivo a Catbox: ${responseText || response.statusText}`);
+  }
+  return responseText;
 }
